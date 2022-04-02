@@ -62,7 +62,7 @@ def parse_file():
                            """
 
     for game in games:
-        hours_recorded = 0
+        hours_recorded = None
 
         for elem in game.iter():
             if elem.tag == "appID":
