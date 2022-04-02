@@ -15,6 +15,11 @@ def connect(path):
                            detect_types=sqlite3.PARSE_COLNAMES)  # allows us to use date-times
     cursor = conn.cursor()
     cursor.execute('PRAGMA foreign_keys=ON;')
+
+    sql_file = open("tables.sql")
+    sql_as_string = sql_file.read()
+    cursor.executescript(sql_as_string)
+
     conn.commit()
     return
 
@@ -25,7 +30,8 @@ def scrape_file():
     :return: None
     """
 
-    steam_id = "thefifthplanet"
+    print("Your Steam ID is found here in your steam profile link: steamcommunity.com/id/**YourIDHere**/")
+    steam_id = input("Please enter your Steam ID: ")
     url = 'https://steamcommunity.com/id/' + steam_id + "/games?xml=1"
 
     response = requests.get(url)

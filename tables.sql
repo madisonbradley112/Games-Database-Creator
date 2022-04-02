@@ -15,17 +15,7 @@ CREATE TABLE hoursPlayed (
     gid INTEGER,
     hours REAL,
     PRIMARY KEY (gid),
-    FOREIGN KEY (gid) REFERENCES games
+    FOREIGN KEY (gid) REFERENCES games ON DELETE CASCADE
+
 );
 
-CREATE TABLE purchaseInfo (
-    gid INTEGER,
-    retailer VARCHAR,
-    fullPrice REAL,
-    purchasePrice REAL,
-    isBundle BOOLEAN,
-    system VARCHAR,
-    purchaseDate DATE,
-    PRIMARY KEY (gid),
-    FOREIGN KEY (gid) REFERENCES games
-);
