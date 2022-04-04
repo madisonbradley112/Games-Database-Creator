@@ -80,11 +80,33 @@ def parse_file():
         conn.commit()
 
 
+def scrape_prices():
+    get_ids = """
+              SELECT gid FROM games;
+              """
+
+    res = cursor.execute(get_ids)
+    res = list(res)
+    # setting up gid string of all games
+    process = True
+    for i in range(0, len(res), 100):
+        process_100 = res[i:i + 100]
+        gids = ""
+        for gid in process_100:
+            gids = gids + str(gid[0]) + ","
+
+        gids = gids[:-1]
+        url = "http://store.steampowered.com/api/appdetails?appids=" + gids + "&cc=us&filters=price_overview"
+        print(url)
+
+
 def main():
     connect("personalDB.sqlite")
     scrape_file()
     parse_file()
-    sys.stdout.close()
+    sys.stdout = sys.__stdout__
+
+    scrape_prices()
 
 
 if __name__ == "__main__":
