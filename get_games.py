@@ -2,6 +2,7 @@ import sys
 from xml.etree import ElementTree as ET
 import requests
 import sqlite3
+import json
 
 conn = None
 cursor = None
@@ -81,14 +82,18 @@ def parse_file():
 
 
 def scrape_prices():
+    """
+    Accesses prices, saves them as a JSON file, and inserts them into the database.
+    Each access only access 100 prices at a time, to avoid limits.
+    """
     get_ids = """
               SELECT gid FROM games;
               """
 
     res = cursor.execute(get_ids)
     res = list(res)
-    # setting up gid string of all games
-    process = True
+
+    # setting up gid strings - we step by 100 to avoid overloading steam API
     for i in range(0, len(res), 100):
         process_100 = res[i:i + 100]
         gids = ""
@@ -96,9 +101,33 @@ def scrape_prices():
             gids = gids + str(gid[0]) + ","
 
         gids = gids[:-1]
-        url = "http://store.steampowered.com/api/appdetails?appids=" + gids + "&cc=us&filters=price_overview"
-        print(url)
+        url = "http://store.steampowered.com/api/appdetails?appids=" + gids + "&cc=ca&filters=price_overview"
 
+        # fetching content of the page and saving it as files
+        response = requests.get(url)
+        path = "game_price_info/game_prices_" + str(i/100) + ".json"
+        with open(path, 'wb') as file:
+            file.write(response.content)
+
+        with open(path, 'r') as file:
+            price_dict = json.loads(file.read())
+
+        insert_prices = """
+                        INSERT INTO prices(gid, price) VALUES (?, ?)
+                        """
+
+        for game, info in price_dict.items():
+            try:
+                data = info['data']
+                price = float(data['price_overview']['initial'] / 100)
+            except KeyError:
+                price = 0.00
+            except TypeError:
+                price = 0.00
+
+            cursor.execute(insert_prices, (game, price))
+
+    conn.commit()
 
 def main():
     connect("personalDB.sqlite")
